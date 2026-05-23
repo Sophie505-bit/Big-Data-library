@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>визуализация</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav>
+    <div class="nav-brand">big data lab</div>
+    <div class="nav-links">
+        <a href="/">главная</a>
+        <a href="/analyze">анализ</a>
+        <a href="/visualize" class="active">визуализация</a>
+        <a href="/train">обучение</a>
+    </div>
+</nav>
+
+<div class="container">
+    <h1>визуализация: {{ filename }}</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="card">
+        <h2>гистограмма</h2>
+        <p class="card-desc">распределение значений числового столбца (до 100 000 строк)</p>
+        <form method="POST" action="/visualize/histogram">
+            <label>столбец:</label>
+            <select name="column" class="form-select">
+                {% for c in numeric_cols %}
+                <option value="{{ c }}">{{ c }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">построить</button>
+        </form>
+        {% if plots_exist.histogram %}
+        <div class="plot-container">
+            <img src="{{ url_for('static', filename='plots/histogram.png') }}"
+                 alt="histogram" class="plot-img">
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2>матрица корреляции</h2>
+        <p class="card-desc">вычисляется через pyspark vectorassembler + correlation api</p>
+        <form method="POST" action="/visualize/correlation">
+            <p>числовые столбцы:
+                {% for c in numeric_cols %}<span class="col-tag">{{ c }}</span>{% endfor %}
+            </p>
+            <button type="submit" class="btn btn-primary">построить</button>
+        </form>
+        {% if plots_exist.correlation %}
+        <div class="plot-container">
+            <img src="{{ url_for('static', filename='plots/correlation.png') }}"
+                 alt="correlation" class="plot-img">
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2>scatter plot</h2>
+        <p class="card-desc">диаграмма рассеяния двух числовых столбцов (до 50 000 точек)</p>
+        <form method="POST" action="/visualize/scatter">
+            <div class="form-row">
+                <div>
+                    <label>ось x:</label>
+                    <select name="col_x" class="form-select">
+                        {% for c in numeric_cols %}
+                        <option value="{{ c }}">{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>ось y:</label>
+                    <select name="col_y" class="form-select">
+                        {% for c in numeric_cols %}
+                        <option value="{{ c }}" {% if loop.index == 2 %}selected{% endif %}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">построить</button>
+        </form>
+        {% if plots_exist.scatter %}
+        <div class="plot-container">
+            <img src="{{ url_for('static', filename='plots/scatter.png') }}"
+                 alt="scatter" class="plot-img">
+        </div>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>
