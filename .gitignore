@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.env
+
+# большие файлы данных не коммитим
+uploads/*.csv
+models/*.pkl
+
+# графики генерируются при работе приложения
+static/plots/*.png
+
+# служебные файлы pyspark
+metastore_db/
+derby.log
+spark-warehouse/
+
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
