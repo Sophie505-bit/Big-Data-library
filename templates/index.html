@@ -2,61 +2,97 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Big Data Lab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>big data lab</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 <nav>
-    <a href="/">Главная</a>
-    <a href="/analyze">Анализ</a>
-    <a href="/visualize">Визуализация</a>
-    <a href="/train">Обучение</a>
+    <div class="nav-brand">big data lab</div>
+    <div class="nav-links">
+        <a href="/" class="active">главная</a>
+        <a href="/analyze">анализ</a>
+        <a href="/visualize">визуализация</a>
+        <a href="/train">обучение</a>
+    </div>
 </nav>
+
 <div class="container">
-    <h1>Загрузка данных</h1>
+    <div class="hero">
+        <h1>big data web application</h1>
+        <p>загружайте большие csv-файлы, анализируйте данные через pyspark,
+           стройте графики и обучайте ml-модели прямо в браузере</p>
+    </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}{% for cat, msg in messages %}
-    <div class="alert alert-{{ cat }}">{{ msg }}</div>
-    {% endfor %}{% endif %}{% endwith %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    {% if current_file %}
+    <div class="alert alert-success">
+        активный файл: <strong>{{ current_file }}</strong>
+    </div>
+    {% endif %}
 
     <div class="card">
-        <h2>Загрузить CSV</h2>
-        <form method="POST" action="/upload" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".csv" required>
-            <button type="submit">Загрузить</button>
+        <h2>загрузить csv-файл</h2>
+        <p class="card-desc">поддерживаются файлы до 500 мб. большие файлы обрабатываются через pyspark.</p>
+        <form method="POST" action="/upload" enctype="multipart/form-data" class="upload-form">
+            <div class="file-input-wrapper">
+                <input type="file" name="file" id="file-input" accept=".csv" required>
+                <label for="file-input" class="file-label">выбрать файл</label>
+                <span class="file-name" id="file-name">файл не выбран</span>
+            </div>
+            <button type="submit" class="btn btn-primary">загрузить</button>
         </form>
-        <p class="hint">Максимум 500 МБ · Обработка через PySpark</p>
     </div>
 
     {% if files %}
     <div class="card">
-        <h2>Загруженные файлы</h2>
-        <ul>
+        <h2>ранее загруженные файлы</h2>
+        <ul class="file-list">
         {% for f in files %}
-        <li>
-            {{ f }}
-            {% if f == current_file %}
-            <span class="badge">активен</span>
-            {% else %}
-            <a href="/load/{{ f }}" class="btn-small">Активировать</a>
-            {% endif %}
-        </li>
+            <li class="file-item">
+                <span class="file-item-name">{{ f }}</span>
+                {% if f == current_file %}
+                    <span class="badge badge-active">активен</span>
+                {% else %}
+                    <a href="/load/{{ f }}" class="btn-small">загрузить</a>
+                {% endif %}
+            </li>
         {% endfor %}
         </ul>
     </div>
     {% endif %}
 
-    {% if current_file %}
-    <div class="card">
-        <h2>Активный файл: {{ current_file }}</h2>
-        <div class="nav-buttons">
-            <a href="/analyze" class="btn-nav">Анализировать</a>
-            <a href="/visualize" class="btn-nav">Визуализировать</a>
-            <a href="/train" class="btn-nav">Обучить модель</a>
+    <div class="features-grid">
+        <div class="feature-card">
+            <h3>анализ данных</h3>
+            <p>схема, типы столбцов, пропущенные значения, описательная статистика</p>
+            <a href="/analyze" class="btn btn-outline">перейти</a>
+        </div>
+        <div class="feature-card">
+            <h3>визуализация</h3>
+            <p>гистограммы, scatter plot, матрица корреляции через pyspark</p>
+            <a href="/visualize" class="btn btn-outline">перейти</a>
+        </div>
+        <div class="feature-card">
+            <h3>ml-модели</h3>
+            <p>random forest, logistic regression, gradient boosting. метрики и графики</p>
+            <a href="/train" class="btn btn-outline">перейти</a>
         </div>
     </div>
-    {% endif %}
 </div>
+
+<script>
+document.getElementById('file-input').addEventListener('change', function() {
+    const name = this.files[0] ? this.files[0].name : 'файл не выбран';
+    document.getElementById('file-name').textContent = name;
+});
+</script>
 </body>
 </html>
