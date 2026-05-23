@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>обучение модели</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav>
+    <div class="nav-brand">big data lab</div>
+    <div class="nav-links">
+        <a href="/">главная</a>
+        <a href="/analyze">анализ</a>
+        <a href="/visualize">визуализация</a>
+        <a href="/train" class="active">обучение</a>
+    </div>
+</nav>
+
+<div class="container">
+    <h1>обучение модели: {{ filename }}</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="card">
+        <h2>параметры обучения</h2>
+        <form method="POST" action="/train" class="train-form">
+
+            <div class="form-group">
+                <label class="form-label">целевой столбец (target):</label>
+                <select name="target" class="form-select">
+                    {% for c in columns %}
+                    <option value="{{ c }}" {% if c == 'target' %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">признаки (features):</label>
+                <p class="form-hint">выберите один или несколько числовых столбцов</p>
+                <div class="checkbox-group">
+                {% for c in numeric_cols %}
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="features" value="{{ c }}"
+                               {% if c != 'target' %}checked{% endif %}>
+                        {{ c }}
+                    </label>
+                {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">алгоритм:</label>
+                    <select name="model_type" class="form-select">
+                        <option value="random_forest">random forest</option>
+                        <option value="logistic_regression">logistic regression</option>
+                        <option value="gradient_boosting">gradient boosting</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">тестовая выборка:</label>
+                    <select name="test_size" class="form-select">
+                        <option value="0.2">20%</option>
+                        <option value="0.3">30%</option>
+                        <option value="0.1">10%</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-large">обучить модель</button>
+        </form>
+    </div>
+
+    {% if results %}
+    <div class="card results-card">
+        <h2>результаты: {{ results.model_name }}</h2>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <span class="metric-value accent">{{ results.accuracy }}%</span>
+                <span class="metric-label">accuracy</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-value">{{ results.train_time }}с</span>
+                <span class="metric-label">время обучения</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-value">{{ "{:,}".format(results.train_size) }}</span>
+                <span class="metric-label">train выборка</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-value">{{ "{:,}".format(results.test_size_count) }}</span>
+                <span class="metric-label">test выборка</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-value">{{ "{:,}".format(results.total_rows) }}</span>
+                <span class="metric-label">всего строк</span>
+            </div>
+        </div>
+
+        <div class="plots-grid">
+            <div class="plot-box">
+                <h3>confusion matrix</h3>
+                <img src="{{ url_for('static', filename='plots/confusion_matrix.png') }}"
+                     alt="confusion matrix" class="plot-img"
+                     onerror="this.parentElement.style.display='none'">
+            </div>
+            {% if results.has_importance %}
+            <div class="plot-box">
+                <h3>важность признаков</h3>
+                <img src="{{ url_for('static', filename='plots/feature_importance.png') }}"
+                     alt="feature importance" class="plot-img"
+                     onerror="this.parentElement.style.display='none'">
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="model-saved">
+            модель сохранена: <code>models/model.pkl</code>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+</body>
+</html>
