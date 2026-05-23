@@ -2,77 +2,149 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Анализ данных</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>анализ данных</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 <nav>
-    <a href="/">🏠 Главная</a>
-    <a href="/analyze">📊 Анализ</a>
-    <a href="/visualize">📈 Визуализация</a>
-    <a href="/train">🤖 Обучение</a>
+    <div class="nav-brand">big data lab</div>
+    <div class="nav-links">
+        <a href="/">главная</a>
+        <a href="/analyze" class="active">анализ</a>
+        <a href="/visualize">визуализация</a>
+        <a href="/train">обучение</a>
+    </div>
 </nav>
+
 <div class="container">
-    <h1>📊 Анализ: {{ filename }}</h1>
-    <p class="subtitle">Всего строк: <strong>{{ "{:,}".format(total_rows) }}</strong></p>
+    <h1>анализ: {{ filename }}</h1>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}{% for cat, msg in messages %}
-    <div class="alert alert-{{ cat }}">{{ msg }}</div>
-    {% endfor %}{% endif %}{% endwith %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-value">{{ "{:,}".format(total_rows) }}</span>
+            <span class="stat-label">строк</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">{{ schema|length }}</span>
+            <span class="stat-label">столбцов</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">
+                {{ missing.values()|selectattr('count', 'gt', 0)|list|length }}
+            </span>
+            <span class="stat-label">столбцов с пропусками</span>
+        </div>
+    </div>
 
     <div class="card">
-        <h2>Схема данных</h2>
+        <h2>схема данных</h2>
         <table>
-            <tr><th>Столбец</th><th>Тип</th><th>Nullable</th></tr>
-            {% for s in schema %}
-            <tr>
-                <td>{{ s.name }}</td>
-                <td><code>{{ s.type }}</code></td>
-                <td>{{ '✅' if s.nullable else '❌' }}</td>
-            </tr>
-            {% endfor %}
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>столбец</th>
+                    <th>тип</th>
+                    <th>nullable</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in schema %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><strong>{{ s.name }}</strong></td>
+                    <td><span class="type-badge">{{ s.type }}</span></td>
+                    <td>{{ 'да' if s.nullable else 'нет' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
     </div>
 
     <div class="card">
-        <h2>Пропущенные значения</h2>
+        <h2>пропущенные значения</h2>
         <table>
-            <tr><th>Столбец</th><th>Кол-во</th><th>Процент</th></tr>
-            {% for cname, info in missing.items() %}
-            <tr>
-                <td>{{ cname }}</td>
-                <td>{{ "{:,}".format(info.count) }}</td>
-                <td>
-                    <span class="{{ 'warn' if info.percent > 5 else '' }}">
-                        {{ info.percent }}%
-                    </span>
-                </td>
-            </tr>
-            {% endfor %}
+            <thead>
+                <tr>
+                    <th>столбец</th>
+                    <th>кол-во пропусков</th>
+                    <th>процент</th>
+                    <th>статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for col_name, info in missing.items() %}
+                <tr>
+                    <td>{{ col_name }}</td>
+                    <td>{{ "{:,}".format(info.count) }}</td>
+                    <td>{{ info.percent }}%</td>
+                    <td>
+                        {% if info.percent == 0 %}
+                            <span class="badge badge-ok">ok</span>
+                        {% elif info.percent < 10 %}
+                            <span class="badge badge-warn">мало</span>
+                        {% else %}
+                            <span class="badge badge-danger">много</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
     </div>
 
     <div class="card">
-        <h2>Описательная статистика</h2>
+        <h2>описательная статистика</h2>
         <div class="table-scroll">
             <table>
-                <tr>{% for c in desc_columns %}<th>{{ c }}</th>{% endfor %}</tr>
-                {% for row in describe %}
-                <tr>{% for c in desc_columns %}<td>{{ row[c] if row[c] is not none else '—' }}</td>{% endfor %}</tr>
-                {% endfor %}
+                <thead>
+                    <tr>
+                        {% for col_name in desc_columns %}
+                        <th>{{ col_name }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in describe %}
+                    <tr>
+                        {% for col_name in desc_columns %}
+                        <td>{{ row[col_name] if row[col_name] is not none else '—' }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
     </div>
 
     <div class="card">
-        <h2>Первые 20 строк</h2>
+        <h2>первые 20 строк</h2>
         <div class="table-scroll">
             <table>
-                <tr>{% for c in columns %}<th>{{ c }}</th>{% endfor %}</tr>
-                {% for row in rows %}
-                <tr>{% for c in columns %}<td>{{ row[c] if row[c] is not none else 'NULL' }}</td>{% endfor %}</tr>
-                {% endfor %}
+                <thead>
+                    <tr>
+                        {% for c in columns %}
+                        <th>{{ c }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+                        {% for c in columns %}
+                        <td>{{ row[c] if row[c] is not none else '—' }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
     </div>
