@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Big Data Lab</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav>
+    <a href="/">Главная</a>
+    <a href="/analyze">Анализ</a>
+    <a href="/visualize">Визуализация</a>
+    <a href="/train">Обучение</a>
+</nav>
+<div class="container">
+    <h1>Загрузка данных</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat, msg in messages %}
+    <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}{% endwith %}
+
+    <div class="card">
+        <h2>Загрузить CSV</h2>
+        <form method="POST" action="/upload" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".csv" required>
+            <button type="submit">Загрузить</button>
+        </form>
+        <p class="hint">Максимум 500 МБ · Обработка через PySpark</p>
+    </div>
+
+    {% if files %}
+    <div class="card">
+        <h2>Загруженные файлы</h2>
+        <ul>
+        {% for f in files %}
+        <li>
+            {{ f }}
+            {% if f == current_file %}
+            <span class="badge">активен</span>
+            {% else %}
+            <a href="/load/{{ f }}" class="btn-small">Активировать</a>
+            {% endif %}
+        </li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if current_file %}
+    <div class="card">
+        <h2>Активный файл: {{ current_file }}</h2>
+        <div class="nav-buttons">
+            <a href="/analyze" class="btn-nav">Анализировать</a>
+            <a href="/visualize" class="btn-nav">Визуализировать</a>
+            <a href="/train" class="btn-nav">Обучить модель</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

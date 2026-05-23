@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Анализ данных</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav>
+    <a href="/">🏠 Главная</a>
+    <a href="/analyze">📊 Анализ</a>
+    <a href="/visualize">📈 Визуализация</a>
+    <a href="/train">🤖 Обучение</a>
+</nav>
+<div class="container">
+    <h1>📊 Анализ: {{ filename }}</h1>
+    <p class="subtitle">Всего строк: <strong>{{ "{:,}".format(total_rows) }}</strong></p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat, msg in messages %}
+    <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}{% endwith %}
+
+    <div class="card">
+        <h2>Схема данных</h2>
+        <table>
+            <tr><th>Столбец</th><th>Тип</th><th>Nullable</th></tr>
+            {% for s in schema %}
+            <tr>
+                <td>{{ s.name }}</td>
+                <td><code>{{ s.type }}</code></td>
+                <td>{{ '✅' if s.nullable else '❌' }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Пропущенные значения</h2>
+        <table>
+            <tr><th>Столбец</th><th>Кол-во</th><th>Процент</th></tr>
+            {% for cname, info in missing.items() %}
+            <tr>
+                <td>{{ cname }}</td>
+                <td>{{ "{:,}".format(info.count) }}</td>
+                <td>
+                    <span class="{{ 'warn' if info.percent > 5 else '' }}">
+                        {{ info.percent }}%
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Описательная статистика</h2>
+        <div class="table-scroll">
+            <table>
+                <tr>{% for c in desc_columns %}<th>{{ c }}</th>{% endfor %}</tr>
+                {% for row in describe %}
+                <tr>{% for c in desc_columns %}<td>{{ row[c] if row[c] is not none else '—' }}</td>{% endfor %}</tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Первые 20 строк</h2>
+        <div class="table-scroll">
+            <table>
+                <tr>{% for c in columns %}<th>{{ c }}</th>{% endfor %}</tr>
+                {% for row in rows %}
+                <tr>{% for c in columns %}<td>{{ row[c] if row[c] is not none else 'NULL' }}</td>{% endfor %}</tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

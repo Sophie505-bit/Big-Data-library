@@ -1,0 +1,9 @@
+flask==3.1.0
+pyspark==3.5.3
+pandas==2.2.3
+numpy==1.26.4
+scikit-learn==1.5.2
+matplotlib==3.9.2
+seaborn==0.13.2
+pyarrow==17.0.0
+werkzeug==3.1.3
